@@ -46,6 +46,11 @@ import { DAILY_PLANS, generate30DayPlan } from './planGenerator';
 import AudioEngine from './components/AudioEngine';
 
 export default function App() {
+  // Set tab/browser title
+  useEffect(() => {
+    document.title = "Cuando todo se derrumba";
+  }, []);
+
   // Navigation & Step States
   const [currentMovement, setCurrentMovement] = useState<Movement>('intro');
   const [prevMovement, setPrevMovement] = useState<Movement | null>(null);
