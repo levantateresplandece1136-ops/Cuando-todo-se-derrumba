@@ -99,7 +99,7 @@ export const DAILY_PLANS: Record<CoreNeed, DayPlan[]> = {
       citation: "Apocalipsis 21:4 — «Enjugará Dios toda lágrima de los ojos de ellos; y ya no habrá muerte, ni habrá más llanto...»",
       truth: "Cada una de tus lágrimas es de gran valor para Dios. Él promete que todo dolor será plenamente redimido.",
       action: "Escucha una canción de adoración instrumental y deja que el Espíritu Santo hable quietud a tu espíritu.",
-      surrender: "El resentimiento reprimido contra las personas que te decepcionaron en momentos difíciles."
+      surrender: "El resentment reprimido contra las personas que te decepcionaron en momentos difíciles."
     },
     {
       day: 6,
@@ -270,3 +270,111 @@ export const DAILY_PLANS: Record<CoreNeed, DayPlan[]> = {
     }
   ]
 };
+
+/**
+ * Generates a complete 30-day plan derived from the selected spiritual/emotional need.
+ * Follows a progressive developmental path through 5 strategic weeks.
+ */
+export function generate30DayPlan(need: CoreNeed): DayPlan[] {
+  const basePlans = DAILY_PLANS[need] || DAILY_PLANS['descanso'];
+  const fullPlan: DayPlan[] = [];
+
+  // Weekly focus subtitles/modifications
+  const focusByNeed: Record<CoreNeed, { w2: string; w3: string; w4: string }> = {
+    descanso: {
+      w2: "Silencio de la Mente (Romper el runrún mental)",
+      w3: "Fronteras Sagradas (Establecer límites sanos)",
+      w4: "Hábito del Santuario (Consistencia en la paz)"
+    },
+    consuelo: {
+      w2: "Sanidad del Quebranto (Mirar la herida con Dios)",
+      w3: "Abrazo de Gracia (Aceptación plena de tu vulnerabilidad)",
+      w4: "Esperanza Restauradora (Bálsamo para el dolor)"
+    },
+    direccion: {
+      w2: "Aclarando el Rumbo (Aquietar voces externas)",
+      w3: "Pasos de Obediencia (Fe activa en lo pequeño)",
+      w4: "Certeza en la Niebla (Confianza firme a largo plazo)"
+    },
+    fortaleza: {
+      w2: "Renovación Interna (Fuerza espiritual en debilidad)",
+      w3: "Coraza de Verdad (Desarraigar mentiras debilitantes)",
+      w4: "Poder de Firmeza (Sostenerse firme en la victoria)"
+    },
+    esperanza: {
+      w2: "Visión del Futuro (La promesa divina es mayor que la crisis)",
+      w3: "Ancla del Alma (Seguridad inquebrantable)",
+      w4: "Promesas de Gloria (Victoria eterna sobre lo temporal)"
+    }
+  };
+
+  const focus = focusByNeed[need] || focusByNeed['descanso'];
+
+  for (let d = 1; d <= 30; d++) {
+    // Ultimate days based on Salmo 23:5 & 6 to provide an elegant culmination to the 30-day journey
+    if (d === 29) {
+      fullPlan.push({
+        day: 29,
+        citation: "Salmo 23:5 — «Aderezas mesa delante de mí en presencia de mis angustiadores; unges mi cabeza con aceite; mi copa está rebosante.»",
+        truth: `Consagración del Alma: La provisión abundante de Dios ocurre en el mismo campo de batalla. No necesitas que tus aflicciones o angustias de ${need.toUpperCase()} desaparezcan primero para experimentar una copa rebosante de Su gracia ungiendo tu mente.`,
+        action: "Prepara un tiempo devocional de adoración y celebra la fidelidad de Dios. Tu gozo delante de los problemas es tu mayor acto de victoria de fe.",
+        surrender: "La vana expectativa de que tu vida esté perfectamente ordenada y libre de conflictos terrenales antes de dar gracias al Señor."
+      });
+      continue;
+    }
+    if (d === 30) {
+      fullPlan.push({
+        day: 30,
+        citation: "Salmo 23:6 — «Ciertamente el bien y la misericordia me seguirán todos los días de mi vida, y en la casa de Jehová moraré por largos días.»",
+        truth: `Victoria Absoluta: ¡La bondad y la gracia divina te persiguen de manera implacable e incondicional! No tienes que mendigar la presencia de Dios; Su amor inagotable es tu residencia fija para siempre, sosteniendo tu proceso de ${need.toUpperCase()}.`,
+        action: "Escribe tu propio salmo o diario recapitulando estos 30 días de fe, y comprométete a mantener un altar diario de silencio, respiración y rendición sagrada.",
+        surrender: "Tu vida entera, tu futuro completo, tus seres queridos y el desenlace final de cada una de tus preocupaciones en las manos tiernas de tu Buen Pastor."
+      });
+      continue;
+    }
+
+    const baseIndex = (d - 1) % 7;
+    const base = basePlans[baseIndex];
+
+    // Determine Week
+    if (d <= 7) {
+      // Week 1 (Days 1-7): Foundations of Grace (Original text)
+      fullPlan.push({
+        day: d,
+        citation: base.citation,
+        truth: `Semana 1 (Cimiento): ${base.truth}`,
+        action: base.action,
+        surrender: base.surrender
+      });
+    } else if (d <= 14) {
+      // Week 2 (Days 8-14): Rooting out barriers
+      fullPlan.push({
+        day: d,
+        citation: `${base.citation.replace("—", `(Día ${d}) —`)}`,
+        truth: `Semana 2 (${focus.w2}): ${base.truth} Reconoce la pauta oculta que sabotea tu paz.`,
+        action: `Diario de Sanidad: Acompaña tu práctica diaria escribiendo con honestidad: ¿Qué temor o mentira enraizada te impide abrazar esta promesa hoy?`,
+        surrender: `Tus viejos patrones de defensa personal, el desgaste del pasado y ${base.surrender.toLowerCase()}`
+      });
+    } else if (d <= 21) {
+      // Week 3 (Days 15-21): Setting boundaries & physical/social action
+      fullPlan.push({
+        day: d,
+        citation: `${base.citation.replace("—", `(Día ${d}) —`)}`,
+        truth: `Semana 3 (${focus.w3}): ${base.truth} Dios te da el discernimiento para proteger tu santuario mental.`,
+        action: `Frontera de Fe: Di un 'no' amoroso pero firme a una demanda externa extenuante. Haz la acción original: ${base.action}`,
+        surrender: `La complacencia complaciente con el entorno que desgasta tu mente, y ${base.surrender.toLowerCase()}`
+      });
+    } else {
+      // Week 4 (Days 22-28): Long-term surrender habits
+      fullPlan.push({
+        day: d,
+        citation: `${base.citation.replace("—", `(Día ${d}) —`)}`,
+        truth: `Semana 4 (${focus.w4}): ${base.truth} Tu obediencia fiel y cotidiana construye un altar de descanso duradero.`,
+        action: `Sello del Hábito: Practica la acción espiritual: ${base.action} Comparte con un hermano o mentor tu compromiso para caminar bajo cuentas claras.`,
+        surrender: `La impaciencia egoísta por ver resultados mágicos e inmediatos, y ${base.surrender.toLowerCase()}`
+      });
+    }
+  }
+
+  return fullPlan;
+}

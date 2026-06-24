@@ -41,7 +41,7 @@ import {
   NEED_DETAILS
 } from './data';
 
-import { DAILY_PLANS } from './planGenerator';
+import { DAILY_PLANS, generate30DayPlan } from './planGenerator';
 
 import AudioEngine from './components/AudioEngine';
 
@@ -103,6 +103,7 @@ export default function App() {
   // Movement 4 State: Sheep Selection & Deep pastoral assessment
   const [selectedSheep, setSelectedSheep] = useState<SheepType>('cansada');
   const [selectedNeed, setSelectedNeed] = useState<CoreNeed>('descanso');
+  const [activePreviewWeek, setActivePreviewWeek] = useState<number>(1);
 
   // Movement 5 State: 30-Day Plan Habit selectors (Max 3/category)
   const [selectedHabits, setSelectedHabits] = useState<{
@@ -415,11 +416,11 @@ export default function App() {
     doc.setFont('Helvetica', 'oblique');
     doc.setFontSize(9);
     doc.setTextColor(100, 100, 100);
-    doc.text('Siete días de renovación espiritual, verdad profunda y acciones deliberadas de fe', 105, 25, { align: 'center' });
+    doc.text('Plan completo de 30 días de renovación espiritual, verdad profunda y acciones deliberadas de fe', 105, 25, { align: 'center' });
     doc.line(20, 29, 190, 29);
 
     let dayPointerY = 34;
-    const plans = DAILY_PLANS[selectedNeed] || DAILY_PLANS['descanso'];
+    const plans = generate30DayPlan(selectedNeed);
 
     plans.forEach((p) => {
       const citationLines = doc.splitTextToSize(p.citation, 150);
@@ -1578,6 +1579,92 @@ export default function App() {
                       </div>
                     </motion.div>
                   )}
+
+                  {/* Interactive 30-Day Roadmap Preview */}
+                  <div className="bg-stone-50/75 rounded-2xl border border-stone-200/60 p-6 space-y-4">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-stone-200/60 pb-3 gap-2">
+                      <div>
+                        <h3 className="font-serif text-lg text-stone-900 font-bold flex items-center gap-2">
+                          <Calendar className="h-5 w-5 text-emerald-800" />
+                          Tu Ruta Devocional de 30 Días
+                        </h3>
+                        <p className="text-xs text-stone-500 font-serif italic">
+                          Explora tu itinerario restaurador completo de 5 etapas
+                        </p>
+                      </div>
+                      <span className="text-[10px] uppercase tracking-wider font-mono font-bold bg-emerald-100 text-emerald-900 px-3 py-1 rounded-full">
+                        30 Días de Guía
+                      </span>
+                    </div>
+
+                    {/* Week selection filters */}
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-2 pb-2">
+                      {[
+                        { key: 1, label: 'Semana 1', range: 'Días 1-7', title: 'Cimientos' },
+                        { key: 2, label: 'Semana 2', range: 'Días 8-14', title: 'Identidad' },
+                        { key: 3, label: 'Semana 3', range: 'Días 15-21', title: 'Límites' },
+                        { key: 4, label: 'Semana 4', range: 'Días 22-28', title: 'Hábito' },
+                        { key: 5, label: 'Semana 5', range: 'Días 29-30', title: 'Consagración' },
+                      ].map((wk) => {
+                        const isSelected = activePreviewWeek === wk.key;
+                        return (
+                          <button
+                            key={wk.key}
+                            onClick={() => setActivePreviewWeek(wk.key)}
+                            className={`px-3 py-2.5 rounded-xl text-center transition-all duration-200 cursor-pointer ${
+                              isSelected
+                                ? 'bg-emerald-800 text-white shadow-sm'
+                                : 'bg-white hover:bg-stone-100 text-stone-600 border border-stone-200/80'
+                            }`}
+                          >
+                            <div className="text-[10px] font-bold uppercase tracking-wide">{wk.label}</div>
+                            <div className={`text-[9px] ${isSelected ? 'text-emerald-100/90' : 'text-stone-400'}`}>
+                              {wk.range}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Preview Cards Container */}
+                    <div className="max-h-[350px] overflow-y-auto pr-1 space-y-4 custom-scrollbar divide-y divide-stone-200/50">
+                      {generate30DayPlan(selectedNeed)
+                        .filter((p) => {
+                          if (activePreviewWeek === 1) return p.day >= 1 && p.day <= 7;
+                          if (activePreviewWeek === 2) return p.day >= 8 && p.day <= 14;
+                          if (activePreviewWeek === 3) return p.day >= 15 && p.day <= 21;
+                          if (activePreviewWeek === 4) return p.day >= 22 && p.day <= 28;
+                          return p.day >= 29 && p.day <= 30;
+                        })
+                        .map((p, idx) => (
+                          <div key={p.day} className={`flex gap-3 group ${idx === 0 ? '' : 'pt-4'}`}>
+                            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center font-mono font-bold text-xs text-emerald-800 group-hover:bg-emerald-800 group-hover:text-white transition-colors duration-200">
+                              {p.day}
+                            </div>
+                            <div className="flex-1 space-y-1.5 text-xs text-stone-700">
+                              <div className="font-serif font-bold text-stone-900 text-sm">
+                                {p.citation.split('—')[0].trim()}
+                              </div>
+                              <p className="font-sans italic text-stone-500 bg-white p-2.5 rounded-xl border border-stone-200/50 leading-relaxed">
+                                {p.citation.includes('—') ? p.citation.substring(p.citation.indexOf('—') + 1).trim() : p.citation}
+                              </p>
+                              <div>
+                                <span className="font-bold text-emerald-800 font-serif">Verdad: </span>
+                                <span className="leading-relaxed">{p.truth.includes(':') ? p.truth.split(':').slice(1).join(':').trim() : p.truth}</span>
+                              </div>
+                              <div>
+                                <span className="font-bold text-emerald-800 font-serif">Acción del día: </span>
+                                <span className="leading-relaxed text-stone-600">{p.action}</span>
+                              </div>
+                              <div className="bg-red-50/30 p-2.5 rounded-xl border border-red-100/40 text-stone-600">
+                                <span className="font-bold text-red-800 font-serif">Rendirse a Dios: </span>
+                                <span className="leading-relaxed">{p.surrender}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
 
                   {/* PDF Download and Master Restart Control Panels */}
                   <div className="pt-6 border-t border-stone-150 flex flex-col sm:flex-row gap-4 justify-between items-center text-center">
