@@ -41,6 +41,8 @@ import {
   NEED_DETAILS
 } from './data';
 
+import { DAILY_PLANS } from './planGenerator';
+
 import AudioEngine from './components/AudioEngine';
 
 export default function App() {
@@ -85,6 +87,18 @@ export default function App() {
     uncontrollable: [],
     controllable: []
   });
+
+  const autoSortBurdens = () => {
+    if (unsortedBurdens.length === 0) return;
+    const controllableTexts = unsortedBurdens.filter(b => b.controllable).map(b => b.text);
+    const uncontrollableTexts = unsortedBurdens.filter(b => !b.controllable).map(b => b.text);
+
+    setControlMatrix((prev) => ({
+      uncontrollable: [...prev.uncontrollable, ...uncontrollableTexts],
+      controllable: [...prev.controllable, ...controllableTexts]
+    }));
+    setUnsortedBurdens([]);
+  };
 
   // Movement 4 State: Sheep Selection & Deep pastoral assessment
   const [selectedSheep, setSelectedSheep] = useState<SheepType>('cansada');
@@ -242,60 +256,81 @@ export default function App() {
       format: 'a4'
     });
 
-    // Beautiful outer margins
-    doc.setDrawColor(107, 142, 120); // Olive wood
-    doc.setLineWidth(1);
-    doc.rect(8, 8, 194, 281);
+    const drawBorders = () => {
+      doc.setDrawColor(107, 142, 120); // Olive wood
+      doc.setLineWidth(1);
+      doc.rect(8, 8, 194, 281);
 
-    doc.setDrawColor(220, 215, 205); // Cream line
-    doc.setLineWidth(0.4);
-    doc.rect(10, 10, 190, 277);
+      doc.setDrawColor(220, 215, 205); // Cream line
+      doc.setLineWidth(0.4);
+      doc.rect(10, 10, 190, 277);
+    };
+
+    // Page 1 setup
+    drawBorders();
 
     // Title Block
     doc.setTextColor(28, 42, 56);
     doc.setFont('Helvetica', 'bold');
-    doc.setFontSize(22);
-    doc.text('MI PLAN DE RENOVACIÓN DE 30 DÍAS', 105, 26, { align: 'center' });
+    doc.setFontSize(20);
+    doc.text('MI PLAN DE RENOVACIÓN PERSONAL', 105, 24, { align: 'center' });
 
     doc.setFont('Helvetica', 'oblique');
-    doc.setFontSize(10.5);
-    doc.text('«Jehová es mi pastor; nada me faltará» — Salmo 23:1', 105, 32, { align: 'center' });
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text('«Jehová es mi pastor; nada me faltará» — Salmo 23:1', 105, 29, { align: 'center' });
 
     // Dividers
     doc.setDrawColor(200, 190, 180);
-    doc.line(20, 38, 190, 38);
+    doc.line(20, 34, 190, 34);
+
+    let pointerY = 42;
+
+    const checkPageSpace = (neededHeight: number) => {
+      if (pointerY + neededHeight > 265) {
+        doc.addPage();
+        drawBorders();
+        pointerY = 22;
+      }
+    };
 
     // Block 1
     doc.setFont('Helvetica', 'bold');
-    doc.setFontSize(12);
+    doc.setFontSize(11.5);
     doc.setTextColor(107, 142, 120);
-    doc.text('1. MI PUNTO DE PARTIDA Y VERDAD GUÍA', 20, 46);
+    doc.text('1. MI PUNTO DE PARTIDA Y VERDAD GUÍA', 20, pointerY);
+    pointerY += 6;
 
     doc.setFont('Helvetica', 'normal');
-    doc.setFontSize(10);
+    doc.setFontSize(9.5);
     doc.setTextColor(50, 50, 50);
 
     const sheepPost = `Hoy me acerco a Dios con el corazón de una oveja: ${selectedSheep.toUpperCase()}`;
     const coreNeedText = `Mi necesidad espiritual primordial hoy es: ${selectedNeed.toUpperCase()}`;
-    doc.text(sheepPost, 20, 53);
-    doc.text(coreNeedText, 20, 59);
+    doc.text(sheepPost, 20, pointerY);
+    pointerY += 5.5;
+    doc.text(coreNeedText, 20, pointerY);
+    pointerY += 7;
 
     doc.setFont('Helvetica', 'bold');
-    doc.text('Mi versículo amparador especial:', 20, 67);
+    doc.text('Mi versículo amparador especial:', 20, pointerY);
+    pointerY += 5;
     doc.setFont('Helvetica', 'oblique');
     const verseText = NEED_DETAILS[selectedNeed]?.verse || 'Salmo 23:1';
-    doc.text(verseText, 20, 72);
+    doc.text(verseText, 20, pointerY);
+    pointerY += 8;
 
-    doc.line(20, 78, 190, 78);
+    doc.setDrawColor(220, 215, 205);
+    doc.line(20, pointerY, 190, pointerY);
+    pointerY += 8;
 
     // Block 2: Daily habits
+    checkPageSpace(30);
     doc.setFont('Helvetica', 'bold');
-    doc.setFontSize(12);
+    doc.setFontSize(11.5);
     doc.setTextColor(107, 142, 120);
-    doc.text('2. COMPROMISOS DIARIOS ESTABLECIDOS', 20, 86);
-
-    doc.setFont('Helvetica', 'normal');
-    let pointerY = 94;
+    doc.text('2. COMPROMISOS DIARIOS ESTABLECIDOS', 20, pointerY);
+    pointerY += 7;
 
     const catLabels = [
       { key: 'mente', label: 'Mi Mente' },
@@ -305,32 +340,43 @@ export default function App() {
     ];
 
     catLabels.forEach((catObj) => {
+      checkPageSpace(15);
       doc.setFont('Helvetica', 'bold');
+      doc.setFontSize(9.5);
+      doc.setTextColor(50, 50, 50);
       doc.text(`${catObj.label}:`, 20, pointerY);
       doc.setFont('Helvetica', 'normal');
 
       const ids = selectedHabits[catObj.key as 'mente' | 'cuerpo' | 'relaciones' | 'comunion'] || [];
       if (ids.length === 0) {
-        doc.text('  - Paso sencillo de gracia y silencio cotidiano.', 20, pointerY + 5);
-        pointerY += 10;
+        doc.text('  - Paso sencillo de gracia y silencio cotidiano.', 20, pointerY + 4.5);
+        pointerY += 8.5;
       } else {
         ids.forEach((id) => {
+          checkPageSpace(10);
           const item = HABIT_PRESETS[catObj.key]?.find((h) => h.id === id);
           const fullText = item ? `* ${item.text}` : '';
           const wrapList = doc.splitTextToSize(fullText, 160);
-          doc.text(wrapList, 22, pointerY + 5);
-          pointerY += 5 + (wrapList.length * 4.2);
+          doc.text(wrapList, 22, pointerY + 4.5);
+          pointerY += 4.5 + (wrapList.length * 4);
         });
-        pointerY += 2;
+        pointerY += 1.5;
       }
     });
 
-    doc.line(20, pointerY + 1, 190, pointerY + 1);
-    pointerY += 9;
+    pointerY += 2;
+    doc.line(20, pointerY, 190, pointerY);
+    pointerY += 8;
 
     // Block 3: Customized Prayer
+    const prayerBody = serverResponsePrayer?.oracion ||
+      'Señor, sÉ mi descanso. En los momentos donde todo parece desmoronarse, líbrame de la fútil carga del control absoluto. Abrazo hoy Tu cuidado constante como Pastor de mi destino.';
+    const wrappedPrayer = doc.splitTextToSize(prayerBody, 165);
+    const neededPrayerHeight = 12 + (wrappedPrayer.length * 4);
+    
+    checkPageSpace(neededPrayerHeight);
     doc.setFont('Helvetica', 'bold');
-    doc.setFontSize(12);
+    doc.setFontSize(11.5);
     doc.setTextColor(107, 142, 120);
     doc.text('3. ORACIÓN PASTORAL PERSONALIZADA', 20, pointerY);
     pointerY += 6;
@@ -338,27 +384,130 @@ export default function App() {
     doc.setFont('Helvetica', 'oblique');
     doc.setFontSize(9);
     doc.setTextColor(60, 60, 60);
-
-    const prayerBody = serverResponsePrayer?.oracion ||
-      'Señor, sÉ mi descanso. En los momentos donde todo parece desmoronarse, líbrame de la fútil carga del control absoluto. Abrazo hoy Tu cuidado constante como Pastor de mi destino.';
-
-    const wrappedPrayer = doc.splitTextToSize(prayerBody, 165);
     doc.text(wrappedPrayer, 20, pointerY);
+    pointerY += (wrappedPrayer.length * 4) + 10;
 
-    pointerY += (wrappedPrayer.length * 4.2) + 12;
+    // Signature Block
+    checkPageSpace(20);
+    doc.setFont('Helvetica', 'bold');
+    doc.setFontSize(9.5);
+    doc.setTextColor(107, 142, 120);
+    doc.text('Firma de Compromiso Conmigo Mismo y Dios:', 20, pointerY);
+    doc.line(100, pointerY + 0.5, 185, pointerY + 0.5);
 
-    if (pointerY < 274) {
+    pointerY += 5;
+    doc.setFont('Helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    doc.text('«No temas, porque yo estoy contigo; no desmayes, porque yo soy tu Dios que te esfuerzo» — Isaías 41:10', 105, pointerY + 2, { align: 'center' });
+
+
+    // ==========================================
+    // PAGE 2+: DAILY DEVOTIONAL PLAN DÍA A DÍA
+    // ==========================================
+    doc.addPage();
+    drawBorders();
+
+    doc.setTextColor(28, 42, 56);
+    doc.setFont('Helvetica', 'bold');
+    doc.setFontSize(15);
+    doc.text('HOJA DE RUTA DIARIA - PLAN DÍA A DÍA', 105, 20, { align: 'center' });
+    doc.setFont('Helvetica', 'oblique');
+    doc.setFontSize(9);
+    doc.setTextColor(100, 100, 100);
+    doc.text('Siete días de renovación espiritual, verdad profunda y acciones deliberadas de fe', 105, 25, { align: 'center' });
+    doc.line(20, 29, 190, 29);
+
+    let dayPointerY = 34;
+    const plans = DAILY_PLANS[selectedNeed] || DAILY_PLANS['descanso'];
+
+    plans.forEach((p) => {
+      const citationLines = doc.splitTextToSize(p.citation, 150);
+      const truthLines = doc.splitTextToSize(p.truth, 145);
+      const actionLines = doc.splitTextToSize(p.action, 145);
+      const surrenderLines = doc.splitTextToSize(p.surrender, 145);
+
+      const lineHt = 4.0;
+      const citationHeight = citationLines.length * lineHt;
+      const truthHeight = truthLines.length * lineHt;
+      const actionHeight = actionLines.length * lineHt;
+      const surrenderHeight = surrenderLines.length * lineHt;
+
+      const padding = 13;
+      const cardHeight = 7 + citationHeight + truthHeight + actionHeight + surrenderHeight + padding;
+
+      // Check if it fits on current page, if not, add page!
+      if (dayPointerY + cardHeight > 270) {
+        doc.addPage();
+        drawBorders();
+
+        // Render mini-header on new page
+        doc.setTextColor(28, 42, 56);
+        doc.setFont('Helvetica', 'bold');
+        doc.setFontSize(12);
+        doc.text('PLAN DIARIO DE RESTAURACIÓN (CONTINUACIÓN)', 105, 18, { align: 'center' });
+        doc.line(20, 22, 190, 22);
+        dayPointerY = 28;
+      }
+
+      // Draw Card background
+      doc.setDrawColor(225, 220, 210);
+      doc.setLineWidth(0.3);
+      doc.setFillColor(252, 251, 249);
+      doc.rect(20, dayPointerY, 170, cardHeight, 'FD');
+
+      // Left Accent Strip
+      doc.setFillColor(107, 142, 120);
+      doc.rect(20, dayPointerY, 3.5, cardHeight, 'F');
+
+      let currentY = dayPointerY + 6;
+
+      // Title
+      doc.setTextColor(28, 42, 56);
       doc.setFont('Helvetica', 'bold');
-      doc.setFontSize(9.5);
-      doc.setTextColor(107, 142, 120);
-      doc.text('Firma de Compromiso Conmigo Mismo y Dios:', 20, pointerY);
-      doc.line(100, pointerY + 0.5, 185, pointerY + 0.5);
+      doc.setFontSize(10.5);
+      doc.text(`DÍA ${p.day} — ${p.citation.split('—')[0].trim()}`, 26, currentY);
+      currentY += 5.5;
 
+      // 1. Cita Bíblica
+      doc.setFont('Helvetica', 'bold');
+      doc.setFontSize(8.5);
+      doc.setTextColor(107, 142, 120);
+      doc.text('Cita Bíblica:', 26, currentY);
+      doc.setFont('Helvetica', 'oblique');
+      doc.setTextColor(60, 60, 60);
+      doc.text(citationLines, 48, currentY);
+      currentY += citationHeight + 1.5;
+
+      // 2. Verdad a Recordar
+      doc.setFont('Helvetica', 'bold');
+      doc.setTextColor(107, 142, 120);
+      doc.text('Verdad a Recordar:', 26, currentY);
       doc.setFont('Helvetica', 'normal');
-      doc.setFontSize(8);
-      doc.setTextColor(100, 100, 100);
-      doc.text('«No temas, porque yo estoy contigo; no desmayes, porque yo soy tu Dios que te esfuerzo» — Isaías 41:10', 105, pointerY + 4.5, { align: 'center' });
-    }
+      doc.setTextColor(60, 60, 60);
+      doc.text(truthLines, 56, currentY);
+      currentY += truthHeight + 1.5;
+
+      // 3. Acción Práctica
+      doc.setFont('Helvetica', 'bold');
+      doc.setTextColor(107, 142, 120);
+      doc.text('Acción Específica:', 26, currentY);
+      doc.setFont('Helvetica', 'normal');
+      doc.setTextColor(60, 60, 60);
+      doc.text(actionLines, 54, currentY);
+      currentY += actionHeight + 1.5;
+
+      // 4. Entregar / Confiar
+      doc.setFont('Helvetica', 'bold');
+      doc.setTextColor(170, 90, 90); // Muted warm rust/red for surrender
+      doc.text('Entregar o Confiar:', 26, currentY);
+      doc.setFont('Helvetica', 'normal');
+      doc.setTextColor(60, 60, 60);
+      doc.text(surrenderLines, 58, currentY);
+      currentY += surrenderHeight + 2;
+
+      dayPointerY += cardHeight + 4.5; // Spacing to next card
+    });
 
     doc.save('Plan_De_Renovacion_Personal_Cuando_Todo_Parece_Derrumbarse.pdf');
   };
@@ -536,15 +685,10 @@ export default function App() {
                   <ArrowLeft className="h-4 w-4" /> Inicio
                 </button>
                 <button
-                  disabled={breathingCyclesCompleted < 1}
                   onClick={() => navigateTo('pause1')}
-                  className={`px-8 py-3 rounded-full font-serif text-sm transition-all duration-300 flex items-center gap-2 cursor-pointer ${
-                    breathingCyclesCompleted >= 1
-                      ? 'bg-emerald-800 text-white hover:bg-emerald-700'
-                      : 'bg-stone-100 text-stone-400 cursor-not-allowed'
-                  }`}
+                  className="px-8 py-3 rounded-full font-serif text-sm transition-all duration-300 flex items-center gap-2 cursor-pointer bg-emerald-800 text-white hover:bg-emerald-700 shadow-md"
                 >
-                  {breathingCyclesCompleted < 1 ? 'Completa un ciclo respiratorio' : 'Siguiente'} <ArrowRight className="h-4 w-4" />
+                  <span>Siguiente</span> <ArrowRight className="h-4 w-4" />
                 </button>
               </div>
             </motion.div>
@@ -571,7 +715,7 @@ export default function App() {
 
               <button
                 onClick={() => navigateTo('mov2_mochila')}
-                className="px-8 py-3.5 bg-emerald-750 text-white rounded-full font-serif text-sm hover:bg-emerald-800 cursor-pointer transition-all duration-300"
+                className="px-8 py-3.5 bg-emerald-700 text-white rounded-full font-serif text-sm hover:bg-emerald-800 cursor-pointer transition-all duration-300 shadow-md"
               >
                 {MICROPAUSES.pause1.actionText}
               </button>
@@ -769,7 +913,7 @@ export default function App() {
 
               <button
                 onClick={() => navigateTo('mov3_claridad')}
-                className="px-8 py-3.5 bg-emerald-750 text-white rounded-full font-serif text-sm hover:bg-emerald-800 cursor-pointer transition-all duration-300"
+                className="px-8 py-3.5 bg-emerald-700 text-white rounded-full font-serif text-sm hover:bg-emerald-800 cursor-pointer transition-all duration-300 shadow-md"
               >
                 {MICROPAUSES.pause2.actionText}
               </button>
@@ -794,17 +938,17 @@ export default function App() {
                 </h2>
                 <div className="h-[2px] w-12 bg-emerald-700 mx-auto mt-3" />
                 <p className="text-sm text-stone-500 font-serif mt-3 max-w-xl mx-auto">
-                  Clasifica cada una de las siguientes dinámicas haciendo clic sobre ellas. Separa lo que tienes poder de cambiar frente a lo que le pertenece únicamente a Dios.
+                  Clasifica cada una de las dinámicas de abajo haciendo un clic directamente sobre ellas. Separa lo que está bajo tu responsabilidad de lo que le pertenece únicamente a Dios. O pulsa el botón de abajo para organizarlas todas ahora mismo.
                 </p>
               </div>
 
               {/* Items sorting stage bar */}
               {unsortedBurdens.length > 0 && (
-                <div className="mb-8 p-4 bg-stone-50 rounded-2xl border border-dashed border-stone-300">
-                  <span className="text-xs font-semibold text-stone-400 uppercase tracking-widest block text-center mb-3">
-                    Dinámicas pendientes por filtrar ({unsortedBurdens.length})
+                <div className="mb-8 p-4 bg-stone-50 rounded-2xl border border-dashed border-stone-350">
+                  <span className="text-xs font-semibold text-stone-500 uppercase tracking-widest block text-center mb-3">
+                    Dinámicas pendientes por filtrar ({unsortedBurdens.length}) — ¡Haz clic para clasificar!
                   </span>
-                  <div className="flex flex-wrap gap-2 justify-center">
+                  <div className="flex flex-wrap gap-2 justify-center mb-4">
                     {unsortedBurdens.map((burden) => (
                       <button
                         key={burden.id}
@@ -817,12 +961,21 @@ export default function App() {
                           }));
                           setUnsortedBurdens((prev) => prev.filter((b) => b.id !== burden.id));
                         }}
-                        className="px-3.5 py-2 bg-white hover:bg-amber-50 hover:border-amber-300 border border-stone-200 rounded-xl text-xs text-stone-700 cursor-pointer shadow-sm transition-all flex items-center gap-1.5 active:scale-95 group"
+                        className="px-3.5 py-2 bg-white hover:bg-emerald-50 hover:border-emerald-300 border border-stone-200 rounded-xl text-xs text-stone-750 cursor-pointer shadow-sm transition-all flex items-center gap-1.5 active:scale-95 group font-serif"
                       >
                         <span>{burden.text}</span>
-                        <Sparkles className="h-3 w-3 text-stone-400 group-hover:text-amber-500" />
+                        <Sparkles className="h-3 w-3 text-stone-400 group-hover:text-emerald-600" />
                       </button>
                     ))}
+                  </div>
+                  <div className="flex justify-center border-t border-stone-200/60 pt-3">
+                    <button
+                      onClick={autoSortBurdens}
+                      className="px-4 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-semibold rounded-xl flex items-center gap-1.5 cursor-pointer shadow-sm transition-all"
+                    >
+                      <Sparkles className="h-3.5 w-3.5 text-emerald-700 animate-pulse" />
+                      <span>Clasificar todo automáticamente</span>
+                    </button>
                   </div>
                 </div>
               )}
@@ -920,13 +1073,13 @@ export default function App() {
                   Regresar a la Mochila
                 </button>
                 <button
-                  disabled={unsortedBurdens.length > 0}
-                  onClick={() => navigateTo('pause3')}
-                  className={`px-8 py-3 rounded-full font-serif text-sm transition-all duration-300 flex items-center gap-2 cursor-pointer ${
-                    unsortedBurdens.length === 0
-                      ? 'bg-emerald-800 text-white hover:bg-emerald-700'
-                      : 'bg-stone-100 text-stone-400 cursor-not-allowed'
-                  }`}
+                  onClick={() => {
+                    if (unsortedBurdens.length > 0) {
+                      autoSortBurdens();
+                    }
+                    navigateTo('pause3');
+                  }}
+                  className="px-8 py-3 bg-emerald-800 text-white hover:bg-emerald-700 rounded-full font-serif text-sm transition-all duration-300 flex items-center gap-2 cursor-pointer shadow-md"
                 >
                   <span>Avanzar</span> <ArrowRight className="h-4 w-4" />
                 </button>
@@ -955,7 +1108,7 @@ export default function App() {
 
               <button
                 onClick={() => navigateTo('mov4_pastor')}
-                className="px-8 py-3.5 bg-emerald-750 text-white rounded-full font-serif text-sm hover:bg-emerald-800 cursor-pointer transition-all duration-300"
+                className="px-8 py-3.5 bg-emerald-700 text-white rounded-full font-serif text-sm hover:bg-emerald-800 cursor-pointer transition-all duration-300 shadow-md"
               >
                 {MICROPAUSES.pause3.actionText}
               </button>
@@ -1376,7 +1529,7 @@ export default function App() {
                           return (
                             <div key={cat.key} className="space-y-1">
                               <h4 className="font-serif font-bold text-stone-800 flex items-center gap-1">
-                                <CheckSquare className="h-3.5 w-3.5 text-emerald-750 stroke-2" /> {cat.label}
+                                <CheckSquare className="h-3.5 w-3.5 text-emerald-700 stroke-2" /> {cat.label}
                               </h4>
                               {list.length === 0 ? (
                                 <p className="text-[10px] text-stone-400 italic">No seleccionaste específicos. Se practicará el silencio espontáneo.</p>
