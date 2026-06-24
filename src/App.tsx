@@ -510,7 +510,7 @@ export default function App() {
       dayPointerY += cardHeight + 4.5; // Spacing to next card
     });
 
-    doc.save('Plan_De_Renovacion_Personal_Cuando_Todo_Parece_Derrumbarse.pdf');
+    doc.save('Plan_De_Renovacion_Personal_Cuando_Todo_Se_Derrumba.pdf');
   };
 
   return (
@@ -568,7 +568,7 @@ export default function App() {
               </div>
 
               <h1 className="font-serif text-3xl md:text-5xl text-stone-900 font-medium tracking-tight mb-4 select-text">
-                Cuando Todo Parece Derrumbarse
+                Cuando Todo se Derrumba
               </h1>
               <p className="text-stone-500 font-serif italic text-base md:text-lg tracking-wide mb-8">
                 Una experiencia guiada e inmersiva para encontrar paz, claridad y dirección cuando tu mundo se siente fuera de control.
@@ -1720,7 +1720,7 @@ export default function App() {
 
       {/* Embedded footer signature line */}
       <div className="w-full text-center text-[10px] text-stone-400/80 uppercase tracking-widest mt-12 mb-2 font-mono">
-        © {new Date().getFullYear()} Cuando Todo Parece Derrumbarse • Consejería Bíblica Cristocéntrica
+        © {new Date().getFullYear()} Cuando Todo se Derrumba • Consejería Bíblica Cristocéntrica
       </div>
     </div>
   );
